@@ -92,3 +92,26 @@ class Maze:
                     walls.append(pygame.Rect(px, py, thickness, CELL_SIZE))
 
         return walls
+    
+    def create_exit(self):
+        # mögliche Randzellen
+        edges = []
+
+        for x in range(self.cols):
+            edges.append((x, 0, "top"))
+            edges.append((x, self.rows - 1, "bottom"))
+
+        for y in range(self.rows):
+            edges.append((0, y, "left"))
+            edges.append((self.cols - 1, y, "right"))
+
+        x, y, wall = random.choice(edges)
+        cell = self.grid[x][y]
+
+        # Wand zum Ausgang öffnen
+        cell.walls[wall] = False
+
+        return x, y, wall
+    
+
+    

@@ -5,7 +5,7 @@ ROWS = 22
 WIDTH = 1280   # >= 720p
 HEIGHT = 720
 
-FPS = 60
+FPS = 144
 
 BG_COLOR = (30, 30, 30)
 WALL_COLOR = (200, 200, 200)
@@ -16,4 +16,8 @@ EXIT_COLOR = (50, 50, 200)
 
 PLAYER_SPEED = 3
 ENEMY_SPEED = 2
-TIME_LIMIT = 60
+TIME_LIMIT = 180
+
+PLAYING = "playing"
+WIN = "win"
+GAME_OVER = "game_over"
