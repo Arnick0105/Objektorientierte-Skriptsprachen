@@ -1,6 +1,6 @@
 import random
 import pygame
-from settings import CELL_SIZE
+from settings import *
 
 class Cell:
     def __init__(self, x, y):
@@ -16,10 +16,18 @@ class Cell:
 
 
 class Maze:
+
+    def maze_to_screen(self, x, y):
+        px = x * CELL_SIZE
+        py = UI_HEIGHT + y * CELL_SIZE
+        return px, py
+    
+
     def __init__(self, cols, rows):
         self.cols = cols
         self.rows = rows
         self.grid = [[Cell(x, y) for y in range(rows)] for x in range(cols)]
+
 
     def get_neighbors(self, cell):
         neighbors = []
@@ -40,6 +48,7 @@ class Maze:
 
         return neighbors
 
+
     def remove_walls(self, current, direction, next_cell):
         if direction == "top":
             current.walls["top"] = False
@@ -54,7 +63,12 @@ class Maze:
             current.walls["left"] = False
             next_cell.walls["right"] = False
 
+
     def generate(self):
+        for x in range(self.cols):
+            for y in range(self.rows):
+                self.grid[x][y].visited = False
+
         stack = []
         current = self.grid[0][0]
         current.visited = True
@@ -73,6 +87,7 @@ class Maze:
             else:
                 break
 
+
     def get_wall_rects(self):
         walls = []
         thickness = 4
@@ -80,7 +95,7 @@ class Maze:
         for x in range(self.cols):
             for y in range(self.rows):
                 cell = self.grid[x][y]
-                px, py = x * CELL_SIZE, y * CELL_SIZE
+                px, py = self.maze_to_screen(x,y)
 
                 if cell.walls["top"]:
                     walls.append(pygame.Rect(px, py, CELL_SIZE, thickness))
@@ -93,6 +108,7 @@ class Maze:
 
         return walls
     
+
     def create_exit(self):
         # mögliche Randzellen
         edges = []
@@ -113,5 +129,8 @@ class Maze:
 
         return x, y, wall
     
+
+    
+
 
     
