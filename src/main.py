@@ -19,10 +19,11 @@ maze = Maze(COLS, ROWS)
 maze.generate()
 exit_x, exit_y, exit_wall = maze.create_exit()
 walls = maze.get_wall_rects()
+cell_px, cell_py = maze.maze_to_screen(0, 0)
 
 player = Player(
-    CELL_SIZE * 0 + CELL_SIZE // 4,
-    CELL_SIZE * 0 + CELL_SIZE // 4
+    cell_px + (CELL_SIZE - PLAYER_SIZE) // 2,
+    cell_py + (CELL_SIZE -PLAYER_SIZE) // 2 
 )
 
 enemy = Enemy(
@@ -31,24 +32,81 @@ enemy = Enemy(
 )
 
 exit_rect = pygame.Rect(
-    exit_x * CELL_SIZE + CELL_SIZE // 4,
-    exit_y * CELL_SIZE + CELL_SIZE // 4,
+    *maze.maze_to_screen(exit_x, exit_y),
     CELL_SIZE // 2,
     CELL_SIZE // 2
 )
 
 timer = GameTimer()
+gold_count = 0
 game_state = PLAYING
 player_name = ""
 entering_name = False
 score_saved = False
+
+def draw_ui_banner():
+    pygame.draw.rect(
+        screen,
+        (30, 30, 30),
+        (0, 0, WIDTH, UI_HEIGHT)
+    )
+
+    pygame.draw.line(
+        screen,
+        (200, 200, 200),
+        (0, UI_HEIGHT),
+        (WIDTH, UI_HEIGHT),
+        2
+    )
+
+    # Timer 
+    time_text = small_font.render(
+        f"Time: {timer.remaining()}s",
+        True,
+        (255, 255, 255)
+    )
+    screen.blit(time_text, (10, UI_HEIGHT // 2 - time_text.get_height() // 2))
+
+    dash_radius = 10
+    dash_x_offset = 20  
+    dash_y = UI_HEIGHT // 2
+
+    # Name vorbereiten, um die Position des Kreises links zu setzen
+    name_text = small_font.render(player_name if player_name else "Player", True, (255, 255, 255))
+    name_x = WIDTH // 2 - name_text.get_width() // 2
+
+    dash_x = name_x - dash_radius * 2 - dash_x_offset 
+
+    if player.dash_cooldown <= 0:
+        # Dash bereit – voller grüner Kreis
+        pygame.draw.circle(screen, (0, 255, 0), (dash_x, dash_y), dash_radius)
+    else:
+        # Dash im Cooldown – leerer Kreis mit rotem Rand
+        pygame.draw.circle(screen, (255, 0, 0), (dash_x, dash_y), dash_radius, 2)
+
+        # Füllung proportional zum Restcooldown
+        fill_ratio = 1 - player.dash_cooldown / PLAYER_DASH_COOLDOWN
+        fill_radius = int(dash_radius * fill_ratio)
+        if fill_radius > 0:
+            pygame.draw.circle(screen, (255, 0, 0), (dash_x, dash_y), fill_radius)
+
+    # Spielername 
+    screen.blit(
+        name_text,
+        (name_x, UI_HEIGHT // 2 - name_text.get_height() // 2)
+    )
+
+    # Gold 
+    gold_text = small_font.render(f"Gold: {gold_count}", True, (255, 215, 0))
+    gold_x = WIDTH - gold_text.get_width() - 10
+    screen.blit(gold_text, (gold_x, UI_HEIGHT // 2 - gold_text.get_height() // 2))
 
 
 def draw_maze():
     for x in range(COLS):
         for y in range(ROWS):
             cell = maze.grid[x][y]
-            px, py = x * CELL_SIZE, y * CELL_SIZE
+            px, py = maze.maze_to_screen(x, y)
 
             if cell.walls["top"]:
                 pygame.draw.line(screen, WALL_COLOR, (px, py), (px + CELL_SIZE, py))
@@ -164,6 +222,8 @@ def main():
                 dx = -1
             if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
                 dx = 1
+            if keys[pygame.K_SPACE]:
+                player.dash(walls)
 
             if dx != 0 and dy != 0:
                 dx *= 0.7
@@ -171,6 +231,8 @@ def main():
 
             player.move(dx, dy, walls)
             enemy.update(walls)
+
+            player.update_cooldown()
 
             if player.rect.colliderect(enemy.rect):
                 game_state = GAME_OVER
@@ -184,17 +246,11 @@ def main():
                 game_state = GAME_OVER
 
             screen.fill(BG_COLOR)
+            draw_ui_banner()
             draw_maze()
             pygame.draw.rect(screen, EXIT_COLOR, exit_rect)
             player.draw(screen)
             enemy.draw(screen)
-
-            time_text = small_font.render(
-                f"Time: {timer.remaining()}",
-                True,
-                (255, 255, 255)
-            )
-            screen.blit(time_text, (10, 10))
 
         elif game_state == WIN:
             draw_win_screen()
@@ -218,13 +274,15 @@ def restart_game():
     walls = maze.get_wall_rects()
 
     exit_rect = pygame.Rect(
-        exit_x * CELL_SIZE + CELL_SIZE // 4,
-        exit_y * CELL_SIZE + CELL_SIZE // 4,
+        *maze.maze_to_screen(exit_x, exit_y),
         CELL_SIZE // 2,
         CELL_SIZE // 2
     )
 
-    player.rect.topleft = (CELL_SIZE // 4, CELL_SIZE // 4)
+    player.rect.topleft = (
+        cell_px + (CELL_SIZE - PLAYER_SIZE) // 2,
+        cell_py + (CELL_SIZE - PLAYER_SIZE) // 2 
+    )
     enemy.rect.topleft = (WIDTH - CELL_SIZE, HEIGHT - CELL_SIZE)
 
     player_name = ""
@@ -245,12 +303,9 @@ if __name__ == "__main__":
 
 
 
-
-
-
-
-
-
-# Dash zum ausweichen von "Gegnern" (drehende Feuerstangen)
-# Player kann manchmal nicht an Wänden vorbei weil die Bewegeung nicht kleine Schritte zulässt
+# Gegner (drehende Feuerstangen)
 # Münzen oder anderes zum aufsammeln (vielleicht mehr Zeit dadurch oder separate Punkte oder kombination aus Restzeit und Münzen)
+# Hauptmenü, wo Spieler seinen namen eingibt. Name soll dann in Banner angezeigt werden
+# Maze wird nur mit der hälfte der Wände nach Restart generiert
+
+# Menü Zeichnungen auslagern damit übersichtlicher

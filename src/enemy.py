@@ -28,4 +28,4 @@ class Enemy:
                 return
 
     def draw(self, screen):
-        pygame.draw.rect(screen, ENEMY_COLOR, self.rect)
+        pygame.draw.rect(screen, ENEMY_COLOR, (self.rect.x, self.rect.y + UI_HEIGHT, self.rect.width, self.rect.height))
