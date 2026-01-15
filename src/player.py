@@ -83,11 +83,13 @@ class Player:
 
     def draw(self, screen):
         # Spieler-Rechteck
-        pygame.draw.rect(screen, PLAYER_COLOR, self.rect)
+        color = (0, 255, 255) if self.dashing else PLAYER_COLOR
+        pygame.draw.rect(screen, color, self.rect)
+
 
         center_x, center_y = self.rect.center
 
-        arrow_length = PLAYER_SIZE // 2 + 6
+        arrow_length = PLAYER_SIZE // 2 - 2
         end_x = center_x + self.last_dx * arrow_length
         end_y = center_y + self.last_dy * arrow_length
 
@@ -100,5 +102,5 @@ class Player:
             perp_x = -self.last_dy * tip_size
             perp_y = self.last_dx * tip_size
 
-            pygame.draw.line(screen, (226, 0, 116), (end_x, end_y), (end_x - self.last_dx * tip_size + perp_x, end_y - self.last_dy * tip_size + perp_y), 3)
-            pygame.draw.line(screen, (226, 0, 116), (end_x, end_y), (end_x - self.last_dx * tip_size - perp_x, end_y - self.last_dy * tip_size - perp_y), 3)
+            pygame.draw.line(screen, (226, 0, 116), (end_x, end_y), (end_x - self.last_dx * tip_size + perp_x, end_y - self.last_dy * tip_size + perp_y), 2)
+            pygame.draw.line(screen, (226, 0, 116), (end_x, end_y), (end_x - self.last_dx * tip_size - perp_x, end_y - self.last_dy * tip_size - perp_y), 2)

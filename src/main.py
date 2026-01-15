@@ -3,7 +3,7 @@ import sys
 
 from maze import Maze
 from player import Player
-from enemy import Enemy
+from enemy import FireBarEnemy
 from timer import GameTimer
 from settings import *
 from leaderboard import save_score, load_scores
@@ -26,9 +26,11 @@ player = Player(
     cell_py + (CELL_SIZE -PLAYER_SIZE) // 2 
 )
 
-enemy = Enemy(
-    WIDTH - CELL_SIZE,
-    HEIGHT - CELL_SIZE
+enemy = FireBarEnemy(
+    center_x = WIDTH // 2,
+    center_y = UI_HEIGHT + HEIGHT // 2,
+    length = 5,
+    speed = 0.01
 )
 
 exit_rect = pygame.Rect(
@@ -230,12 +232,14 @@ def main():
                 dy *= 0.7
 
             player.move(dx, dy, walls)
-            enemy.update(walls)
+            enemy.update()
 
             player.update_cooldown()
 
-            if player.rect.colliderect(enemy.rect):
-                game_state = GAME_OVER
+            if not player.dashing:
+                for hitbox in enemy.hitboxes:
+                    if player.rect.colliderect(hitbox):
+                        game_state = GAME_OVER
 
             if player.rect.colliderect(exit_rect):
                 entering_name = True
@@ -283,7 +287,13 @@ def restart_game():
         cell_px + (CELL_SIZE - PLAYER_SIZE) // 2,
         cell_py + (CELL_SIZE - PLAYER_SIZE) // 2 
     )
-    enemy.rect.topleft = (WIDTH - CELL_SIZE, HEIGHT - CELL_SIZE)
+
+    enemy = FireBarEnemy(
+        center_x = WIDTH // 2,
+        center_y = UI_HEIGHT + HEIGHT // 2,
+        length = 5,
+        speed = 0.01
+    )
 
     player_name = ""
     entering_name = False
@@ -303,7 +313,7 @@ if __name__ == "__main__":
 
 
 
-# Gegner (drehende Feuerstangen)
+# Gegner (drehende Feuerstangen) mit ansteigenenm Level schwerer machen
 # Münzen oder anderes zum aufsammeln (vielleicht mehr Zeit dadurch oder separate Punkte oder kombination aus Restzeit und Münzen)
 # Hauptmenü, wo Spieler seinen namen eingibt. Name soll dann in Banner angezeigt werden
 # Maze wird nur mit der hälfte der Wände nach Restart generiert
