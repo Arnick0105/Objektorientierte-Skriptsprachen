@@ -67,7 +67,14 @@ class Maze:
     def generate(self):
         for x in range(self.cols):
             for y in range(self.rows):
-                self.grid[x][y].visited = False
+                cell = self.grid[x][y]
+                cell.visited = False
+                cell.walls = {
+                    "top": True,
+                    "right": True,
+                    "bottom": True,
+                    "left": True
+                }
 
         stack = []
         current = self.grid[0][0]

@@ -1,31 +1,50 @@
 import pygame
-import random
+import math
 from settings import *
 
-class Enemy:
-    def __init__(self, x, y):
-        self.rect = pygame.Rect(x, y, CELL_SIZE // 2, CELL_SIZE // 2)
-        self.direction = random.choice([(1,0), (-1,0), (0,1), (0,-1)])
+class FireBarEnemy:
+    def __init__(self, center_x, center_y, length, speed):
+        self.center_x = center_x
+        self.center_y = center_y
 
-    def update(self, walls):
-        if random.randint(0, 100) < 2:
-            self.direction = random.choice([(1,0), (-1,0), (0,1), (0,-1)])
+        self.length = length + 2             # Anzahl Segmente
+        self.segment_radius = 10
+        self.segment_distance = 14
 
-        dx, dy = self.direction
+        self.angle = 0
+        self.speed = speed
 
-        self.rect.x += dx * ENEMY_SPEED
-        for wall in walls:
-            if self.rect.colliderect(wall):
-                self.rect.x -= dx * ENEMY_SPEED
-                self.direction = random.choice([(1,0), (-1,0), (0,1), (0,-1)])
-                return
+        self.segments = []
 
-        self.rect.y += dy * ENEMY_SPEED
-        for wall in walls:
-            if self.rect.colliderect(wall):
-                self.rect.y -= dy * ENEMY_SPEED
-                self.direction = random.choice([(1,0), (-1,0), (0,1), (0,-1)])
-                return
+        self.hitboxes = []
+
+    def update(self):
+        self.angle += self.speed
+        self.segments.clear()
+        self.hitboxes.clear()
+
+        for i in range(1, self.length + 1):
+            radius = i * self.segment_distance
+            x = self.center_x + math.cos(self.angle) * radius
+            y = self.center_y + math.sin(self.angle) * radius
+
+            rect = pygame.Rect(
+                x - self.segment_radius,
+                y - self.segment_radius,
+                self.segment_radius * 2,
+                self.segment_radius * 2
+            )
+            self.segments.append(rect)
+            self.hitboxes.append(rect)
 
     def draw(self, screen):
-        pygame.draw.rect(screen, ENEMY_COLOR, (self.rect.x, self.rect.y + UI_HEIGHT, self.rect.width, self.rect.height))
+        for segment in self.segments:
+            pygame.draw.circle(
+                screen,
+                (255, 80, 0),
+                segment.center,
+                self.segment_radius
+            )
+
+    def collides_with(self, player_rect):
+        return any(player_rect.colliderect(seg) for seg in self.segments)
