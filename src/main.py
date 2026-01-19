@@ -1,5 +1,4 @@
 import pygame
-import sys
 import random
 
 from maze import Maze
